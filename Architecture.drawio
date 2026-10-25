@@ -1,0 +1,96 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Architecture" id="arch">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Utilisateur -->
+        <mxCell id="user" value="Utilisateur&lt;br&gt;(Admin / DevOps / Viewer)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="40" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value="&lt;b&gt;Navigateur web&lt;/b&gt;&lt;br&gt;HTTPS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="130" y="280" width="120" height="60" as="geometry" />
+        </mxCell>
+        <!-- Serveur VPS -->
+        <mxCell id="vps" value="Serveur VPS / VM / Cloud" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;verticalAlign=top;fontStyle=1;fillColor=none;strokeColor=#666666;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="290" y="40" width="840" height="580" as="geometry" />
+        </mxCell>
+        <mxCell id="compose" value="Docker Compose (réseau interne cloudops-net)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=3;" vertex="1" parent="1">
+          <mxGeometry x="310" y="80" width="800" height="440" as="geometry" />
+        </mxCell>
+        <!-- Frontend -->
+        <mxCell id="front" value="&lt;b&gt;Conteneur frontend&lt;/b&gt;&lt;br&gt;Next.js (App Router)&lt;br&gt;TypeScript&lt;br&gt;&lt;br&gt;Pages : Auth, Dashboard,&lt;br&gt;Projets, Serveurs,&lt;br&gt;Applications, Monitoring,&lt;br&gt;Alertes&lt;br&gt;&lt;i&gt;port 3000&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="340" y="200" width="190" height="200" as="geometry" />
+        </mxCell>
+        <!-- Backend -->
+        <mxCell id="back" value="Conteneur backend — NestJS (API REST, port 4000)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;arcSize=4;" vertex="1" parent="1">
+          <mxGeometry x="580" y="120" width="330" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="sec" value="Sécurité : JWT, Guards, rôles&lt;br&gt;ValidationPipe (DTO), filtre d'exceptions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="600" y="155" width="290" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" value="Auth / Users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="220" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" value="Projets / Équipes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="220" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" value="Serveurs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="220" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" value="Applications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="270" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m5" value="Monitoring" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="270" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m6" value="Alertes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="800" y="270" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="m7" value="Dashboard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="600" y="320" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="sched" value="Planificateur&lt;br&gt;(@nestjs/schedule)&lt;br&gt;simulation métriques" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="700" y="320" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="orm" value="Prisma ORM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="385" width="290" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="swag" value="Swagger UI (/api/docs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="600" y="435" width="290" height="35" as="geometry" />
+        </mxCell>
+        <!-- Base de données -->
+        <mxCell id="db" value="&lt;b&gt;Conteneur base de données&lt;/b&gt;&lt;br&gt;PostgreSQL&lt;br&gt;&lt;i&gt;port 5432&lt;/i&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="950" y="240" width="140" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="vol" value="Volume persistant&lt;br&gt;pgdata" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="970" y="545" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="env" value="Fichier .env&lt;br&gt;(variables d'environnement)" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="340" y="545" width="170" height="55" as="geometry" />
+        </mxCell>
+        <!-- Liens -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="user" target="browser">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="browser" target="front">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="REST / JSON&lt;br&gt;+ JWT Bearer" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;startArrow=classic;" edge="1" parent="1" source="front" target="back">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="SQL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;startArrow=classic;" edge="1" parent="1" source="orm" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;dashed=1;" edge="1" parent="1" source="db" target="vol">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;" edge="1" parent="1" source="env" target="compose">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

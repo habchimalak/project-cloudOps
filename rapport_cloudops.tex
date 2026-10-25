@@ -1,0 +1,346 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{float}      % Permet de fixer la figure avec [H]
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{hyperref}
+\definecolor{entete}{RGB}{31,78,121}
+
+\title{Projet CloudOps Manager}
+\author{Rami Moulehi \and Aziz Ktiti \and Malak Habchi \and Samar Sifaoui}
+\date{Octobre 2026}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% Tableau de besoins fonctionnels réutilisable
+% Argument : légende du tableau
+\newenvironment{tablebesoins}[1]
+{\renewcommand{\arraystretch}{1.3}
+ \begin{longtable}{|L{0.09\linewidth}|L{0.48\linewidth}|L{0.16\linewidth}|C{0.12\linewidth}|}
+ \hline
+\rowcolor{entete}
+ \textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Besoin}} & \textcolor{white}{\textbf{Acteur(s)}} & \textcolor{white}{\textbf{Priorité}} \\ \hline
+ \endhead
+ \caption{#1}
+ \endlastfoot}
+{\end{longtable}}
+
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Spécification des besoins}
+
+\subsection{Introduction}
+
+CloudOps Manager est une plateforme web full-stack qui centralise la gestion des
+projets, des serveurs et des applications cloud d'une entreprise. Elle permet aussi
+de superviser ces ressources et de traiter les alertes.
+
+Cette partie recense les besoins du système. Elle identifie d'abord les acteurs,
+puis présente les besoins fonctionnels par module et les besoins non fonctionnels,
+avant de décrire la stack technologique, l'architecture et le diagramme de cas d'utilisation.
+
+Chaque besoin fonctionnel porte un identifiant unique (BF-xx) et une priorité :
+\textbf{Haute} pour les fonctionnalités obligatoires du cœur métier,
+\textbf{Moyenne} pour celles qui les complètent, \textbf{Basse} pour les
+améliorations facultatives (bonus du cahier des charges).
+
+% ---------------------------------------------------------------------
+\subsection{Identification des acteurs}
+
+Le système fait intervenir trois acteurs humains authentifiés, qui correspondent aux
+trois rôles imposés, un visiteur non authentifié et un acteur système.
+
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|L{0.22\linewidth}|L{0.14\linewidth}|L{0.50\linewidth}|}
+\hline
+\rowcolor{entete}
+\textcolor{white}{\textbf{Acteur}} & \textcolor{white}{\textbf{Type}} & \textcolor{white}{\textbf{Description}} \\
+\hline
+Visiteur & Humain & Personne non authentifiée : elle peut uniquement s'inscrire
+ou se connecter. \\ \hline
+Administrateur & Humain & Gère les utilisateurs, leurs rôles et l'ensemble des
+ressources. Il dispose de tous les droits. \\ \hline
+DevOps & Humain & Gère les serveurs et les applications, configure les seuils
+d'alerte et traite les incidents. \\ \hline
+Viewer & Humain & Consulte les projets, les ressources, le tableau de bord et le
+monitoring, sans pouvoir rien modifier, à l'exception de son propre profil. \\ \hline
+Système (planificateur) & Automatique & Génère ou collecte périodiquement les
+mesures, compare les valeurs aux seuils et déclenche les alertes. \\
+\hline
+\end{tabular}
+\caption{Acteurs du système}
+\label{tab:acteurs}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{Besoins fonctionnels}
+
+Les besoins fonctionnels décrivent les services que la plateforme doit rendre à ses
+utilisateurs. Ils sont regroupés selon les huit modules obligatoires du cahier des
+charges. Dans les tableaux, « Tous » désigne les trois rôles authentifiés
+(Admin, DevOps, Viewer).
+
+\subsubsection{Authentification et gestion des utilisateurs}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Authentification et utilisateurs}
+BF-01 & Le système doit permettre à un visiteur de s'inscrire, ou à
+l'administrateur de créer un compte utilisateur. & Visiteur, Admin & Haute \\ \hline
+BF-02 & Le système doit permettre à un utilisateur de s'authentifier par email et
+mot de passe et lui délivrer un jeton JWT. & Visiteur & Haute \\ \hline
+BF-03 & Le système doit permettre à un utilisateur de se déconnecter (suppression
+du jeton côté client). & Tous & Haute \\ \hline
+BF-04 & Le système doit permettre à un utilisateur de consulter et modifier son
+profil. & Tous & Moyenne \\ \hline
+BF-05 & Le système doit permettre à l'administrateur de lister, créer, modifier,
+désactiver et supprimer des utilisateurs (sauf son propre compte). & Admin & Haute \\ \hline
+BF-06 & Le système doit permettre à l'administrateur d'attribuer un rôle (Admin,
+DevOps, Viewer) à chaque utilisateur. & Admin & Haute \\ \hline
+BF-07 & Le système doit restreindre l'accès aux routes et aux actions selon le rôle
+de l'utilisateur connecté. & Système & Haute \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Gestion des projets}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Gestion des projets}
+BF-08 & Le système doit permettre de créer, consulter, modifier et supprimer un
+projet. & Admin & Haute \\ \hline
+BF-09 & Le système doit permettre de créer des équipes et d'y ajouter ou retirer des
+membres. & Admin & Haute \\ \hline
+BF-10 & Le système doit permettre d'affecter des équipes ou des utilisateurs à un
+projet. & Admin & Haute \\ \hline
+BF-11 & Le système doit permettre de définir les environnements d'un projet
+(développement, staging, production). & Admin, DevOps & Haute \\ \hline
+BF-12 & Le système doit afficher la liste des projets avec pagination, recherche et
+filtres (statut, équipe, environnement). & Tous & Moyenne \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Gestion des serveurs}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Gestion des serveurs}
+BF-13 & Le système doit permettre de créer, consulter, modifier et supprimer un
+serveur VPS ou VM. & Admin, DevOps & Haute \\ \hline
+BF-14 & Le système doit enregistrer pour chaque serveur son fournisseur, sa région,
+son CPU, sa RAM, son stockage, son adresse IP et son statut. & Admin, DevOps & Haute \\ \hline
+BF-15 & Le système doit permettre de rattacher un serveur à un projet et à un
+environnement. & Admin, DevOps & Haute \\ \hline
+BF-16 & Le système doit afficher la liste des serveurs avec pagination, recherche et
+filtres (fournisseur, région, statut). & Tous & Moyenne \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Gestion des applications}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Gestion des applications}
+BF-17 & Le système doit permettre de créer, consulter, modifier et supprimer une
+application. & Admin, DevOps & Haute \\ \hline
+BF-18 & Le système doit permettre d'associer chaque application à un serveur.
+& Admin, DevOps & Haute \\ \hline
+BF-19 & Le système doit enregistrer pour chaque application sa version, son
+environnement et son statut. & Admin, DevOps & Haute \\ \hline
+BF-20 & Le système doit afficher la liste des applications avec pagination,
+recherche et filtres (serveur, environnement, statut). & Tous & Moyenne \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Monitoring}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Monitoring}
+BF-21 & Le système doit générer ou collecter périodiquement les mesures CPU et RAM
+de chaque serveur. & Système & Haute \\ \hline
+BF-22 & Le système doit conserver l'historique horodaté des mesures. & Système & Haute \\ \hline
+BF-23 & Le système doit calculer et afficher la disponibilité de chaque serveur.
+& Système, Tous & Moyenne \\ \hline
+BF-24 & Le système doit afficher des graphiques d'évolution CPU/RAM sur une période
+choisie. & Tous & Haute \\ \hline
+BF-25 & Le système doit mettre à jour automatiquement l'affichage des mesures.
+& Système & Moyenne \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Alertes et incidents}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Alertes et incidents}
+BF-26 & Le système doit permettre de configurer des seuils d'alerte (par exemple
+CPU $>$ 85\,\%) par serveur ou de façon globale. & Admin, DevOps & Haute \\ \hline
+BF-27 & Le système doit créer automatiquement une alerte lorsqu'une mesure dépasse
+un seuil. & Système & Haute \\ \hline
+BF-28 & Le système doit attribuer à chaque alerte un niveau de gravité (info,
+avertissement, critique). & Système & Haute \\ \hline
+BF-29 & Le système doit permettre de prendre en charge une alerte puis de la marquer
+comme résolue. & Admin, DevOps & Moyenne \\ \hline
+BF-30 & Le système doit afficher l'historique des incidents, filtrable par gravité,
+serveur, statut et période. & Tous & Haute \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Tableau de bord}
+
+\begin{tablebesoins}{Besoins fonctionnels -- Tableau de bord}
+BF-31 & Le système doit afficher des compteurs globaux : projets, serveurs,
+applications et alertes actives. & Tous & Haute \\ \hline
+BF-32 & Le système doit afficher des indicateurs clés : serveurs en ligne et hors
+ligne, utilisation moyenne CPU/RAM, disponibilité. & Tous & Haute \\ \hline
+BF-33 & Le système doit afficher des graphiques de synthèse (répartition par statut
+ou fournisseur, évolution des alertes). & Tous & Moyenne \\ \hline
+BF-34 & Le système doit permettre de filtrer le tableau de bord par projet,
+environnement et période. & Tous & Moyenne \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Déploiement}
+
+Ce module ne correspond pas à une interaction d'un utilisateur final : ses besoins
+sont des exigences portées par l'équipe de développement.
+
+\begin{tablebesoins}{Besoins fonctionnels -- Déploiement}
+BF-35 & L'application complète (frontend, backend, base de données) doit se lancer
+avec Docker Compose. & Équipe projet & Haute \\ \hline
+BF-36 & La configuration doit passer par des variables d'environnement.
+& Équipe projet & Haute \\ \hline
+BF-37 & Les données doivent être conservées après redémarrage grâce à un volume
+persistant. & Équipe projet & Haute \\ \hline
+BF-38 & L'application doit être déployée sur un VPS, une VM ou le cloud et
+accessible pour la démonstration. & Équipe projet & Haute \\ \hline
+\end{tablebesoins}
+
+\subsubsection{Fonctionnalités bonus}
+
+Le cahier des charges propose des fonctionnalités facultatives, qui peuvent
+rapporter jusqu'à deux points de bonus.
+
+\begin{tablebesoins}{Besoins fonctionnels -- Fonctionnalités bonus}
+BF-39 & Le système doit pousser les nouvelles mesures et alertes en temps réel
+vers l'interface (WebSocket). & Système & Basse \\ \hline
+BF-40 & Chaque modification du dépôt doit déclencher automatiquement les tests et
+la construction des images (CI/CD avec GitHub Actions). & Équipe projet & Basse \\ \hline
+BF-41 & L'application peut être déployée sur un fournisseur cloud (AWS ou Azure).
+& Équipe projet & Basse \\ \hline
+\end{tablebesoins}
+
+% ---------------------------------------------------------------------
+
+\subsection{Besoins non fonctionnels}
+
+Les besoins non fonctionnels fixent les critères de qualité et les contraintes que
+le système doit respecter.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{longtable}{|L{0.10\linewidth}|L{0.18\linewidth}|L{0.58\linewidth}|}
+\hline
+\rowcolor{entete}
+\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Catégorie}} & \textcolor{white}{\textbf{Besoin}} \\
+\hline
+\endhead
+\caption{Besoins non fonctionnels}
+\label{tab:bnf}
+\endlastfoot
+BNF-01 & Sécurité & Les mots de passe sont stockés hachés (bcrypt) et les routes
+protégées exigent un jeton JWT valide. \\ \hline
+BNF-02 & Sécurité & Le contrôle d'accès par rôle est appliqué côté backend,
+indépendamment de l'interface. \\ \hline
+BNF-03 & Fiabilité & Toutes les entrées sont validées par des DTO et des pipes ; les
+erreurs sont gérées de façon centralisée avec des réponses cohérentes. \\ \hline
+BNF-04 & Performance & Les listes sont paginées pour limiter le volume de données
+renvoyé. \\ \hline
+BNF-05 & Ergonomie & L'interface est responsive (mobile, tablette, ordinateur) et
+affiche les états de chargement et d'erreur. \\ \hline
+BNF-06 & Maintenabilité & Le code est organisé en modules NestJS et typé en
+TypeScript de bout en bout. \\ \hline
+BNF-07 & Interopérabilité & L'API REST expose au moins 20 endpoints documentés avec
+Swagger. \\ \hline
+BNF-08 & Qualité & Le projet comporte des tests unitaires et quelques tests
+d'intégration avec Jest. \\ \hline
+BNF-09 & Portabilité & L'application est conteneurisée avec Docker et se déploie de
+façon reproductible. \\ \hline
+BNF-10 & Persistance & Les données sont stockées dans PostgreSQL et survivent au
+redémarrage des conteneurs. \\ \hline
+BNF-11 & Traçabilité & L'historique Git reflète la contribution de chaque membre de
+l'équipe. \\ \hline
+BNF-12 & Conformité & Les mesures de monitoring sont simulées ; une collecte
+réelle n'est réalisée que sur une infrastructure de test contrôlée. \\ \hline
+BNF-13 & Données & La base de données comporte au moins huit entités liées entre
+elles. \\ \hline
+\end{longtable}
+\end{center}
+
+% ---------------------------------------------------------------------
+\subsection{Stack technologique}
+
+Le cahier des charges impose la stack suivante. Le tableau~\ref{tab:stack} précise,
+pour chaque couche, les technologies retenues et leur rôle dans CloudOps Manager.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|L{0.17\linewidth}|L{0.28\linewidth}|L{0.45\linewidth}|}
+\hline
+\rowcolor{entete}
+\textcolor{white}{\textbf{Couche}} & \textcolor{white}{\textbf{Technologies}} & \textcolor{white}{\textbf{Rôle dans le projet}} \\
+\hline
+Frontend & Next.js, TypeScript, App Router & Interface web responsive : pages
+d'authentification, tableau de bord, gestion des ressources et graphiques de
+monitoring. \\ \hline
+Backend & NestJS, TypeScript, API REST, Swagger & API organisée en modules
+(Auth, Projets, Serveurs, Applications, Monitoring, Alertes, Dashboard),
+documentée avec Swagger. \\ \hline
+Données & PostgreSQL, Prisma & Base relationnelle et persistante. Prisma (ORM)
+gère le schéma, les migrations et les requêtes typées\,\footnotemark. \\ \hline
+Sécurité & JWT, Guards, contrôle d'accès par rôle & Authentification par jeton,
+Guards NestJS et décorateur de rôles (Admin, DevOps, Viewer) sur chaque
+route protégée. \\ \hline
+Infrastructure & Docker, Docker Compose, VPS / VM / Cloud & Un conteneur par
+service (frontend, backend, base de données), orchestrés par Docker Compose et
+déployés sur un serveur accessible. \\ \hline
+Tests & Jest & Tests unitaires des services et tests d'intégration des
+principaux endpoints. \\ \hline
+\end{tabular}
+\caption{Stack technologique de CloudOps Manager}
+\label{tab:stack}
+\end{table}
+\footnotetext{Le cahier des charges autorise Prisma ou TypeORM. Nous avons choisi
+Prisma pour son schéma déclaratif unique, ses migrations automatiques et le typage
+TypeScript généré pour les requêtes.}
+
+% ---------------------------------------------------------------------
+\newpage
+\subsection{Architecture}
+
+L'architecture de CloudOps Manager comprend un frontend Next.js, un backend
+NestJS et une base de données PostgreSQL, conteneurisés avec Docker Compose
+(figure~\ref{fig:Architecture}).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Architecture.png}
+    \caption{Architecture globale de CloudOps Manager}
+    \label{fig:Architecture}
+\end{figure}
+
+% ---------------------------------------------------------------------
+\subsection{Diagramme de cas d'utilisation}
+
+La figure~\ref{fig:cas-utilisation} présente les cas d'utilisation de la plateforme
+et les acteurs qui les déclenchent. Les trois rôles humains sont liés par une relation
+de généralisation : l'Administrateur dispose de tous les cas du DevOps, qui dispose
+lui-même de tous ceux du Viewer. Le visiteur peut uniquement s'inscrire et
+s'authentifier. Le planificateur collecte périodiquement les mesures et génère une
+alerte lorsqu'un seuil est dépassé.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{diagramme_cas_utilisation.png}
+    \caption{Diagramme de cas d'utilisation global de CloudOps Manager}
+    \label{fig:cas-utilisation}
+\end{figure}
+
+\end{document}
