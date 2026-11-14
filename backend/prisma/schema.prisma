@@ -214,8 +214,10 @@ model Application {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  server      Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  // RESTRICT (TP §7) : on refuse de supprimer un serveur ou un environnement
+  // qui héberge encore des applications
+  server      Server      @relation(fields: [serverId], references: [id], onDelete: Restrict)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Restrict)
 
   @@unique([name, serverId])
   @@map("applications")
@@ -276,7 +278,8 @@ model Alert {
   acknowledgedAt   DateTime?
   resolvedAt       DateTime?
 
-  server         Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  // RESTRICT (TP §7) : protège l'historique des incidents
+  server         Server          @relation(fields: [serverId], references: [id], onDelete: Restrict)
   threshold      AlertThreshold? @relation(fields: [thresholdId], references: [id], onDelete: SetNull)
   acknowledgedBy User?           @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
   resolvedBy     User?           @relation("ResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
