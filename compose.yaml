@@ -1,0 +1,18 @@
+# Base PostgreSQL en conteneur (semaine 2, équivalent du TP §5)
+# Lancer : docker compose up -d db
+# Identifiants réservés au développement local
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cloudops
+      POSTGRES_PASSWORD: cloudops
+      POSTGRES_DB: cloudops
+    ports:
+      - "5433:5432" # hôte:conteneur (5433 évite un conflit avec un PostgreSQL installé localement)
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
