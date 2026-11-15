@@ -1,17 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { EnvironmentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateEnvironmentDto } from './dto/create-environment.dto';
+import { UpdateEnvironmentDto } from './dto/update-environment.dto';
 
-export class CreateEnvironmentDto {
-  name!: string;
-  type!: EnvironmentType;
-  projectId!: number;
-}
-
-export class UpdateEnvironmentDto {
-  name?: string;
-  type?: EnvironmentType;
-}
+export { CreateEnvironmentDto, UpdateEnvironmentDto };
 
 @Injectable()
 export class EnvironmentsService {

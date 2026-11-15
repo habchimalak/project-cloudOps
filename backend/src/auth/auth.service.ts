@@ -39,4 +39,13 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return { access_token: this.jwtService.sign(payload) };
   }
+
+  async me(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      omit: { password: true },
+    });
+    if (!user) throw new UnauthorizedException('Utilisateur introuvable');
+    return user;
+  }
 }

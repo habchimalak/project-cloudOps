@@ -1,18 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateMetricDto } from './dto/create-metric.dto';
+import { UpdateMetricDto } from './dto/update-metric.dto';
 
-export class CreateMetricDto {
-  serverId!: number;
-  cpuUsage!: number;
-  ramUsage!: number;
-  isUp?: boolean;
-}
-
-export class UpdateMetricDto {
-  cpuUsage?: number;
-  ramUsage?: number;
-  isUp?: boolean;
-}
+export { CreateMetricDto, UpdateMetricDto };
 
 @Injectable()
 export class MetricsService {
