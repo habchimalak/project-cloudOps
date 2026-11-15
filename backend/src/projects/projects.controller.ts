@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectsQueryDto } from './dto/projects-query.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectsService } from './projects.service';
 
@@ -15,12 +16,13 @@ import { ProjectsService } from './projects.service';
 export class ProjectsController {
   constructor(private readonly service: ProjectsService) {}
 
-  @ApiOperation({ summary: 'Lister tous les projets' })
-  @ApiResponse({ status: 200, description: 'Liste des projets.' })
+  @ApiOperation({ summary: 'Lister les projets (pagination, recherche, filtre par statut)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des projets : { data, meta }.' })
+  @ApiResponse({ status: 400, description: 'Paramètres de pagination ou de filtre invalides.' })
   @ApiResponse({ status: 401, description: 'Non authentifié.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: ProjectsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir un projet par ID' })
   @ApiResponse({ status: 200, description: 'Projet trouvé.' })

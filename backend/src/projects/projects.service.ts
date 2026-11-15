@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { ProjectsQueryDto } from './dto/projects-query.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
 export { CreateProjectDto, UpdateProjectDto };
@@ -9,8 +11,28 @@ export { CreateProjectDto, UpdateProjectDto };
 export class ProjectsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.project.findMany();
+  async findAll(query: ProjectsQueryDto) {
+    const { page, limit, search, status } = query;
+
+    const where: Prisma.ProjectWhereInput = {
+      ...(status && { status }),
+      ...(search && { name: { contains: search, mode: 'insensitive' } }),
+    };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.project.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { id: 'asc' },
+      }),
+      this.prisma.project.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: number) {
