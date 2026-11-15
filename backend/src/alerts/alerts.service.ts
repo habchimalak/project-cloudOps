@@ -1,5 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { AlertStatus, Severity } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+
+export class CreateAlertDto {
+  message!: string;
+  severity!: Severity;
+  measuredValue!: number;
+  serverId!: number;
+  thresholdId?: number;
+}
+
+export class UpdateAlertDto {
+  message?: string;
+  severity?: Severity;
+  status?: AlertStatus;
+  acknowledgedById?: number;
+  resolvedById?: number;
+  acknowledgedAt?: Date;
+  resolvedAt?: Date;
+}
 
 @Injectable()
 export class AlertsService {
@@ -9,7 +28,23 @@ export class AlertsService {
     return this.prisma.alert.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.alert.findUnique({ where: { id } });
+  async findOne(id: number) {
+    const alert = await this.prisma.alert.findUnique({ where: { id } });
+    if (!alert) throw new NotFoundException(`Alerte #${id} introuvable`);
+    return alert;
+  }
+
+  create(dto: CreateAlertDto) {
+    return this.prisma.alert.create({ data: dto });
+  }
+
+  async update(id: number, dto: UpdateAlertDto) {
+    await this.findOne(id);
+    return this.prisma.alert.update({ where: { id }, data: dto });
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.alert.delete({ where: { id } });
   }
 }
