@@ -1,0 +1,290 @@
+// Schéma de la base de données CloudOps Manager
+// Documentation : https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// Énumérations
+// =====================================================================
+
+enum Role {
+  ADMIN
+  DEVOPS
+  VIEWER
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  ARCHIVED
+}
+
+enum EnvironmentType {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+}
+
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+}
+
+enum AppStatus {
+  RUNNING
+  STOPPED
+  DEPLOYING
+  FAILED
+}
+
+enum MetricType {
+  CPU
+  RAM
+}
+
+enum Comparator {
+  GT // >
+  LT // <
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED // prise en charge
+  RESOLVED
+}
+
+// =====================================================================
+// 1. Utilisateurs (module Authentification)
+// =====================================================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String // haché avec bcrypt
+  firstName String
+  lastName  String
+  role      Role     @default(VIEWER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamMemberships    TeamMember[]
+  projectAssignments ProjectAssignment[]
+  acknowledgedAlerts Alert[]             @relation("AcknowledgedBy")
+  resolvedAlerts     Alert[]             @relation("ResolvedBy")
+
+  @@map("users")
+}
+
+// =====================================================================
+// 2. Équipes (module Projets)
+// =====================================================================
+
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMember[]
+  assignments ProjectAssignment[]
+
+  @@map("teams")
+}
+
+// Table d'association User <-> Team
+model TeamMember {
+  userId   Int
+  teamId   Int
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@id([userId, teamId])
+  @@map("team_members")
+}
+
+// =====================================================================
+// 3. Projets
+// =====================================================================
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  environments Environment[]
+  assignments  ProjectAssignment[]
+
+  @@map("projects")
+}
+
+// Affectation d'une équipe OU d'un utilisateur à un projet
+model ProjectAssignment {
+  id         Int      @id @default(autoincrement())
+  projectId  Int
+  teamId     Int?
+  userId     Int?
+  assignedAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, teamId])
+  @@unique([projectId, userId])
+  @@map("project_assignments")
+}
+
+// Environnement d'un projet (dev, staging, prod)
+model Environment {
+  id        Int             @id @default(autoincrement())
+  name      String
+  type      EnvironmentType
+  projectId Int
+  createdAt DateTime        @default(now())
+
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  servers      Server[]
+  applications Application[]
+
+  @@unique([projectId, type])
+  @@map("environments")
+}
+
+// =====================================================================
+// 4. Serveurs
+// =====================================================================
+
+model Server {
+  id            Int          @id @default(autoincrement())
+  name          String       @unique
+  provider      String // AWS, Azure, OVH, DigitalOcean...
+  region        String
+  cpuCores      Int
+  ramGb         Int
+  storageGb     Int
+  ipAddress     String       @unique
+  status        ServerStatus @default(ONLINE)
+  environmentId Int?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  environment  Environment?     @relation(fields: [environmentId], references: [id], onDelete: SetNull)
+  applications Application[]
+  metrics      Metric[]
+  thresholds   AlertThreshold[]
+  alerts       Alert[]
+
+  @@index([provider])
+  @@index([status])
+  @@map("servers")
+}
+
+// =====================================================================
+// 5. Applications
+// =====================================================================
+
+model Application {
+  id            Int       @id @default(autoincrement())
+  name          String
+  version       String
+  status        AppStatus @default(RUNNING)
+  serverId      Int
+  environmentId Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // RESTRICT (TP §7) : on refuse de supprimer un serveur ou un environnement
+  // qui héberge encore des applications
+  server      Server      @relation(fields: [serverId], references: [id], onDelete: Restrict)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Restrict)
+
+  @@unique([name, serverId])
+  @@map("applications")
+}
+
+// =====================================================================
+// 6. Monitoring
+// =====================================================================
+
+model Metric {
+  id         Int      @id @default(autoincrement())
+  serverId   Int
+  cpuUsage   Float // pourcentage 0-100
+  ramUsage   Float // pourcentage 0-100
+  isUp       Boolean  @default(true) // pour le calcul de disponibilité
+  recordedAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, recordedAt])
+  @@map("metrics")
+}
+
+// =====================================================================
+// 7. Alertes
+// =====================================================================
+
+// Seuil d'alerte : serverId null = seuil global
+model AlertThreshold {
+  id         Int        @id @default(autoincrement())
+  metricType MetricType
+  comparator Comparator @default(GT)
+  value      Float // ex : 85 pour CPU > 85 %
+  severity   Severity   @default(WARNING)
+  isActive   Boolean    @default(true)
+  serverId   Int?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  server Server? @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  alerts Alert[]
+
+  @@map("alert_thresholds")
+}
+
+// Alerte / incident déclenché par un dépassement de seuil
+model Alert {
+  id               Int         @id @default(autoincrement())
+  message          String
+  severity         Severity
+  status           AlertStatus @default(OPEN)
+  measuredValue    Float
+  serverId         Int
+  thresholdId      Int?
+  acknowledgedById Int?
+  resolvedById     Int?
+  createdAt        DateTime    @default(now())
+  acknowledgedAt   DateTime?
+  resolvedAt       DateTime?
+
+  // RESTRICT (TP §7) : protège l'historique des incidents
+  server         Server          @relation(fields: [serverId], references: [id], onDelete: Restrict)
+  threshold      AlertThreshold? @relation(fields: [thresholdId], references: [id], onDelete: SetNull)
+  acknowledgedBy User?           @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolvedBy     User?           @relation("ResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, severity])
+  @@index([serverId, createdAt])
+  @@map("alerts")
+}
