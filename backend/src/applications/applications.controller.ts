@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ApplicationsService } from './applications.service';
+import { ApplicationsQueryDto } from './dto/applications-query.dto';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 
@@ -15,11 +16,12 @@ import { UpdateApplicationDto } from './dto/update-application.dto';
 export class ApplicationsController {
   constructor(private readonly service: ApplicationsService) {}
 
-  @ApiOperation({ summary: 'Lister toutes les applications' })
-  @ApiResponse({ status: 200, description: 'Liste des applications.' })
+  @ApiOperation({ summary: 'Lister les applications (pagination, recherche, filtres serveur/environnement/statut)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des applications : { data, meta }.' })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: ApplicationsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir une application par ID' })
   @ApiResponse({ status: 200, description: 'Application trouvée.' })

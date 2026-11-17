@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateMetricDto } from './dto/create-metric.dto';
+import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { UpdateMetricDto } from './dto/update-metric.dto';
 import { MetricsService } from './metrics.service';
 
@@ -15,11 +16,12 @@ import { MetricsService } from './metrics.service';
 export class MetricsController {
   constructor(private readonly service: MetricsService) {}
 
-  @ApiOperation({ summary: 'Lister toutes les métriques' })
-  @ApiResponse({ status: 200, description: 'Liste des métriques.' })
+  @ApiOperation({ summary: 'Lister les métriques (pagination, filtres serveur et période)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des métriques : { data, meta }.' })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: MetricsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir une métrique par ID' })
   @ApiResponse({ status: 200, description: 'Métrique trouvée.' })

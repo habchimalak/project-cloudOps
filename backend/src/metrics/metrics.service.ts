@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMetricDto } from './dto/create-metric.dto';
+import { MetricsQueryDto } from './dto/metrics-query.dto';
 import { UpdateMetricDto } from './dto/update-metric.dto';
 
 export { CreateMetricDto, UpdateMetricDto };
@@ -9,12 +11,41 @@ export { CreateMetricDto, UpdateMetricDto };
 export class MetricsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.metric.findMany();
+  async findAll(query: MetricsQueryDto) {
+    const { page, limit, serverId, from, to } = query;
+
+    const where: Prisma.MetricWhereInput = {
+      ...(serverId && { serverId }),
+      ...((from || to) && {
+        recordedAt: {
+          ...(from && { gte: new Date(from) }),
+          ...(to && { lte: new Date(to) }),
+        },
+      }),
+    };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.metric.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { recordedAt: 'desc' },
+        include: { server: { select: { id: true, name: true } } },
+      }),
+      this.prisma.metric.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: number) {
-    const metric = await this.prisma.metric.findUnique({ where: { id } });
+    const metric = await this.prisma.metric.findUnique({
+      where: { id },
+      include: { server: { select: { id: true, name: true } } },
+    });
     if (!metric) throw new NotFoundException(`Métrique #${id} introuvable`);
     return metric;
   }

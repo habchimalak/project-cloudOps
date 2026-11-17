@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateServerDto } from './dto/create-server.dto';
+import { ServersQueryDto } from './dto/servers-query.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
 import { ServersService } from './servers.service';
 
@@ -15,11 +16,12 @@ import { ServersService } from './servers.service';
 export class ServersController {
   constructor(private readonly service: ServersService) {}
 
-  @ApiOperation({ summary: 'Lister tous les serveurs' })
-  @ApiResponse({ status: 200, description: 'Liste des serveurs.' })
+  @ApiOperation({ summary: 'Lister les serveurs (pagination, recherche, filtres fournisseur/région/statut)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des serveurs : { data, meta }.' })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: ServersQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir un serveur par ID' })
   @ApiResponse({ status: 200, description: 'Serveur trouvé.' })

@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { AlertsService } from './alerts.service';
+import { AlertsQueryDto } from './dto/alerts-query.dto';
 import { CreateAlertDto } from './dto/create-alert.dto';
 import { UpdateAlertDto } from './dto/update-alert.dto';
 
@@ -15,11 +16,12 @@ import { UpdateAlertDto } from './dto/update-alert.dto';
 export class AlertsController {
   constructor(private readonly service: AlertsService) {}
 
-  @ApiOperation({ summary: 'Lister toutes les alertes' })
-  @ApiResponse({ status: 200, description: 'Liste des alertes.' })
+  @ApiOperation({ summary: 'Lister les alertes (pagination, filtres gravité/statut/serveur/période)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des alertes : { data, meta }.' })
+  @ApiResponse({ status: 400, description: 'Paramètres invalides.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: AlertsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir une alerte par ID' })
   @ApiResponse({ status: 200, description: 'Alerte trouvée.' })
