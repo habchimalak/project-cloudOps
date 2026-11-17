@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { AlertsService } from '../alerts/alerts.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMetricDto } from './dto/create-metric.dto';
 import { MetricsQueryDto } from './dto/metrics-query.dto';
@@ -9,7 +10,10 @@ export { CreateMetricDto, UpdateMetricDto };
 
 @Injectable()
 export class MetricsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly alertsService: AlertsService,
+  ) {}
 
   async findAll(query: MetricsQueryDto) {
     const { page, limit, serverId, from, to } = query;
@@ -50,8 +54,15 @@ export class MetricsService {
     return metric;
   }
 
-  create(dto: CreateMetricDto) {
-    return this.prisma.metric.create({ data: dto });
+  async create(dto: CreateMetricDto) {
+    const metric = await this.prisma.metric.create({ data: dto });
+    // BF-27 : vérification automatique des seuils après chaque mesure enregistrée
+    await this.alertsService.checkThresholds(
+      metric.serverId,
+      metric.cpuUsage,
+      metric.ramUsage,
+    );
+    return metric;
   }
 
   async update(id: number, dto: UpdateMetricDto) {

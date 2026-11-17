@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Comparator, MetricType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AlertsQueryDto } from './dto/alerts-query.dto';
 import { CreateAlertDto } from './dto/create-alert.dto';
@@ -72,5 +72,59 @@ export class AlertsService {
   async remove(id: number) {
     await this.findOne(id);
     return this.prisma.alert.delete({ where: { id } });
+  }
+
+  // ----------------------------------------------------------------
+  // Génération automatique d'alertes (BF-27)
+  // Appelé par MetricsService après chaque enregistrement de métrique.
+  // ----------------------------------------------------------------
+  async checkThresholds(
+    serverId: number,
+    cpuUsage: number,
+    ramUsage: number,
+  ): Promise<void> {
+    // Charge les seuils actifs : spécifiques à ce serveur OU globaux (serverId null)
+    const thresholds = await this.prisma.alertThreshold.findMany({
+      where: {
+        isActive: true,
+        OR: [{ serverId }, { serverId: null }],
+      },
+    });
+
+    for (const threshold of thresholds) {
+      const measured =
+        threshold.metricType === MetricType.CPU ? cpuUsage : ramUsage;
+
+      const triggered =
+        threshold.comparator === Comparator.GT
+          ? measured > threshold.value
+          : measured < threshold.value;
+
+      if (!triggered) continue;
+
+      // Évite les doublons : ne crée pas une nouvelle alerte OPEN si une alerte
+      // identique (même seuil, même serveur) est déjà ouverte ou acquittée.
+      const existing = await this.prisma.alert.findFirst({
+        where: {
+          serverId,
+          thresholdId: threshold.id,
+          status: { in: ['OPEN', 'ACKNOWLEDGED'] },
+        },
+      });
+
+      if (existing) continue;
+
+      const comparatorLabel = threshold.comparator === Comparator.GT ? '>' : '<';
+      await this.prisma.alert.create({
+        data: {
+          message: `${threshold.metricType} ${comparatorLabel} ${threshold.value}% (valeur mesurée : ${measured.toFixed(1)}%)`,
+          severity: threshold.severity,
+          status: 'OPEN',
+          measuredValue: measured,
+          serverId,
+          thresholdId: threshold.id,
+        },
+      });
+    }
   }
 }
