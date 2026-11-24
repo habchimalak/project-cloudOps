@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEnvironmentDto } from './dto/create-environment.dto';
+import { EnvironmentsQueryDto } from './dto/environments-query.dto';
 import { UpdateEnvironmentDto } from './dto/update-environment.dto';
 
 export { CreateEnvironmentDto, UpdateEnvironmentDto };
@@ -9,8 +10,25 @@ export { CreateEnvironmentDto, UpdateEnvironmentDto };
 export class EnvironmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.environment.findMany();
+  async findAll(query: EnvironmentsQueryDto) {
+    const { page, limit, projectId } = query;
+
+    const where = projectId ? { projectId } : {};
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.environment.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { id: 'asc' },
+      }),
+      this.prisma.environment.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: number) {

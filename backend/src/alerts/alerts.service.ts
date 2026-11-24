@@ -66,7 +66,14 @@ export class AlertsService {
 
   async update(id: number, dto: UpdateAlertDto) {
     await this.findOne(id);
-    return this.prisma.alert.update({ where: { id }, data: dto as any });
+    return this.prisma.alert.update({
+      where: { id },
+      data: {
+        ...dto,
+        acknowledgedAt: dto.acknowledgedAt ? new Date(dto.acknowledgedAt) : undefined,
+        resolvedAt: dto.resolvedAt ? new Date(dto.resolvedAt) : undefined,
+      },
+    });
   }
 
   async remove(id: number) {

@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateTeamDto } from './dto/create-team.dto';
+import { TeamsQueryDto } from './dto/teams-query.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { TeamsService } from './teams.service';
 
@@ -15,12 +16,12 @@ import { TeamsService } from './teams.service';
 export class TeamsController {
   constructor(private readonly service: TeamsService) {}
 
-  @ApiOperation({ summary: 'Lister toutes les équipes' })
-  @ApiResponse({ status: 200, description: 'Liste des équipes.' })
+  @ApiOperation({ summary: 'Lister les équipes (pagination, recherche)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des équipes : { data, meta }.' })
   @ApiResponse({ status: 401, description: 'Non authentifié.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: TeamsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir une équipe par ID' })
   @ApiResponse({ status: 200, description: 'Équipe trouvée.' })

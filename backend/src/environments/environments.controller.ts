@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CreateEnvironmentDto } from './dto/create-environment.dto';
+import { EnvironmentsQueryDto } from './dto/environments-query.dto';
 import { UpdateEnvironmentDto } from './dto/update-environment.dto';
 import { EnvironmentsService } from './environments.service';
 
@@ -15,11 +16,11 @@ import { EnvironmentsService } from './environments.service';
 export class EnvironmentsController {
   constructor(private readonly service: EnvironmentsService) {}
 
-  @ApiOperation({ summary: 'Lister tous les environnements' })
-  @ApiResponse({ status: 200, description: 'Liste des environnements.' })
+  @ApiOperation({ summary: 'Lister les environnements (pagination, filtre par projet)' })
+  @ApiResponse({ status: 200, description: 'Liste paginée des environnements : { data, meta }.' })
   @Roles(Role.ADMIN, Role.DEVOPS, Role.VIEWER)
   @Get()
-  findAll() { return this.service.findAll(); }
+  findAll(@Query() query: EnvironmentsQueryDto) { return this.service.findAll(query); }
 
   @ApiOperation({ summary: 'Obtenir un environnement par ID' })
   @ApiResponse({ status: 200, description: 'Environnement trouvé.' })

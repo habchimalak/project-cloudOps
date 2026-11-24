@@ -1,17 +1,11 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
-import { IsEnum } from 'class-validator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { UsersService } from './users.service';
-
-class UpdateRoleDto {
-  @ApiProperty({ enum: Role, example: Role.DEVOPS })
-  @IsEnum(Role)
-  role!: Role;
-}
 
 @ApiTags('users')
 @ApiBearerAuth('access-token')
